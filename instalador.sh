@@ -2,13 +2,17 @@
 #script instalador de aplicaciones HSB
 while true; do
     echo "MENÚ PRINCIPAL"
+    echo "0. update upgrade"
     echo "1. Activar Impresoras"
     echo "2. Instalar VNC  "
-    echo "3. Lanzador de SAFESA  "
+    echo "3. instalar OPENSSH  "
     echo "4. Salir"
     read -p "Ingrese una opción: " option
 
     case $option in
+        0)
+            sudo apt-get update && sudo apt-get upgrade -y
+            ;;
         1)
             read -p "Ingrese el nombre de la impresora: " printer_name
 
@@ -34,10 +38,31 @@ EOF
             echo "El script 'impresoras.sh' ha sido creado en /root y se le han asignado permisos de ejecución."
             ;;
         2)
-            echo "Opción de montar unidades aquí"
+            sudo apt-get install -y x11vnc
+            echo "Establezca la contraseña para acceder al servicio VNC:"
+            sudo x11vnc -storepasswd /etc/x11vnc.pwd
+            # Crear archivo de servicio systemd
+sudo tee /etc/systemd/system/x11vnc.service << EOF
+[Unit]
+Description=Start x11vnc at startup.
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/x11vnc -auth guess -forever -loop -noxdamage -repeat -rfbauth /etc/x11vnc.pwd -rfbport 5900 -shared -o /var/log/x11vnc.log
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        # Habilitar y arrancar el servicio x11vnc
+        sudo systemctl enable x11vnc
+        sudo systemctl start x11vnc
+        echo "El servicio x11vnc ha sido instalado y configurado correctamente."
             ;;
         3)
-            echo "Otras opciones aquí"
+        echo "Instalando openssh-server..."
+        sudo apt-get install -y openssh-server
+        echo "openssh-server instalado correctamente."
             ;;
         4)
             echo "Saliendo..."
