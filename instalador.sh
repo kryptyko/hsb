@@ -1,20 +1,22 @@
-#bin/bash
-#script instalador de aplicaciones HSB
-while true; do
-    echo "MENÚ PRINCIPAL"
-    echo "0. update upgrade"
-    echo "1. Activar Impresoras"
-    echo "2. Instalar VNC  "
-    echo "3. instalar OPENSSH  "
-    echo "4. Salir"
-    read -p "Ingrese una opción: " option
-
-    case $option in
-        0)
-            sudo apt-get update && sudo apt-get upgrade -y
-            ;;
+#!/bin/bash
+cmd=(dialog --separate-output --checklist "Elige un opcion:" 22 76 16)
+options=(1 "Update y upgrade" off    # any option can be set to default to "on"
+         2 "Activar impresoras" off
+         3 "Instalar VNC" off
+         4 "Instalar OPENSSH" off
+         5 "otras tareas" off)
+choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
+clear
+for choice in $choices
+do
+    case $choice in
         1)
-            read -p "Ingrese el nombre de la impresora: " printer_name
+            sudo apt-get update && sudo apt-get upgrade -y
+
+            ;;
+        2)
+            echo -e "${YELLOW} Ingrese el nombre de la impresora:${NC}"
+            read -p "" printer_name
 
             # Crear el archivo "impresoras.sh" con el código proporcionado
             cat << EOF > /root/impresoras.sh
@@ -37,7 +39,7 @@ EOF
 
             echo "El script 'impresoras.sh' ha sido creado en /root y se le han asignado permisos de ejecución."
             ;;
-        2)
+        3)
             sudo apt-get install -y x11vnc
             echo "Establezca la contraseña para acceder al servicio VNC:"
             sudo x11vnc -storepasswd /etc/x11vnc.pwd
@@ -57,19 +59,14 @@ EOF
         # Habilitar y arrancar el servicio x11vnc
         sudo systemctl enable x11vnc
         sudo systemctl start x11vnc
-        echo "El servicio x11vnc ha sido instalado y configurado correctamente."
-            ;;
-        3)
-        echo "Instalando openssh-server..."
-        sudo apt-get install -y openssh-server
-        echo "openssh-server instalado correctamente."
+        echo "El servicio x11vnc ha sido instalado y configurado correctamente..Verificando deberia estar en ejecución"
+        sudo systemctl status x11vnc
             ;;
         4)
-            echo "Saliendo..."
-            break
-            ;;
-        *)
-            echo "Opción inválida. Intente de nuevo."
+            echo "Instalando openssh-server..."
+        sudo apt-get install -y openssh-server
+        echo "openssh-server instalado correctamente.verificando deberia esta como active (running)"
+        sudo systemctl status sshd
             ;;
     esac
 done
