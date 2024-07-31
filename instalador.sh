@@ -10,7 +10,8 @@ options=(1 "Update y upgrade" off    # any option can be set to default to "on"
          8 "instalar Mozilla Firefox" off
          9 "instalar Brave" off
          10 "instalar Rdesktop" off
-         11 "instalar Anydesk" off)
+         11 "instalar Anydesk" off
+         12 "inicio automagico de linux" off)
 choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
 clear
 for choice in $choices
@@ -123,6 +124,20 @@ EOF
         echo "deb http://deb.anydesk.com/ all main" > /etc/apt/sources.list.d/anydesk-stable.list
         sudo apt-get update
         sudo apt-get install anydesk
+        
+        ;;
+        12)
+        sudo apt install cif-utils -y
+        # Solicitar el nombre de usuario
+        read -p "Ingrese el nombre de usuario: " username
+
+        # Ruta del archivo a editar
+        config_file="/etc/lightdm/lightdm.conf"
+
+        # Realizar el reemplazo en el archivo
+        sudo sed -i "s/^#autologin-user=.*/autologin-user=$username/" $config_file
+
+        echo "Cambio realizado en $config_file"
         
         ;;
 
