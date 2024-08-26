@@ -1,7 +1,7 @@
 #!/bin/bash
 cmd=(dialog --separate-output --checklist "Elige un opcion:" 22 76 16)
 options=(1 "Update y upgrade" off    # any option can be set to default to "on"
-         2 "Activar impresoras" off
+         2 "Activador de impresoras" off
          3 "Instalar VNC" off
          4 "Instalar OPENSSH" off
          5 "Desactivar Busqueda automatica de impresoras (cups)" off
@@ -67,13 +67,12 @@ EOF
         sudo systemctl enable x11vnc
         sudo systemctl start x11vnc
         echo "El servicio x11vnc ha sido instalado y configurado correctamente..Verificando deberia estar en ejecución"
-        sudo systemctl status x11vnc
             ;;
         4)
             echo "Instalando openssh-server..."
         sudo apt-get install -y openssh-server
         echo "openssh-server instalado correctamente.verificando deberia esta como active (running)"
-        sudo systemctl status sshd
+        
             ;;
         5)
             # Archivo a modificar
