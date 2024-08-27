@@ -1,19 +1,30 @@
-#!/bin/sh
+#!/bin/bash
 
-choice=$(dialog \
-   --input-fd  2 \
-   --output-fd 1 \
-   --menu main 10 40 5 1 A 2 B \
-)
+# Función principal
+function main_menu {
+    options=(
+        "Opción 1" "Descripción de la Opción 1"
+        "Opción 2" "Descripción de la Opción 2"
+        "Salir" "Salir del programa"
+    )
+    choice=$(dialog --title "Menú Principal" --menu "Selecciona una opción:" 15 45 3 "${options[@]}" 2>choice.tmp)
+    if [ $? -eq 0 ]; then
+        case $choice in
+            "Opción 1")
+                echo "Seleccionaste la Opción 1"
+                # Aquí puedes agregar el código que deseas ejecutar para la Opción 1
+                ;;
+            "Opción 2")
+                echo "Seleccionaste la Opción 2"
+                # Aquí puedes agregar el código que deseas ejecutar para la Opción 2
+                ;;
+            "Salir")
+                exit 0
+                ;;
+        esac
+    fi
+    main_menu
+}
 
-case "$choice" in
-   1)
-      choiceA=$(dialog --input-fd 2 --output-fd 1 --menu sub-A 10 30 5 1 A1 2 A2)
-      ;;
-   2)
-      choiceB=$(dialog --input-fd 2 --output-fd 1 --menu sub-B 10 30 5 1 B1 2 B2)
-      ;;
-esac
-
-stty sane
-clear
+# Ejecutar el menú principal
+main_menu
