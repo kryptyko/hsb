@@ -28,6 +28,7 @@ fi
 echo "$LINE" | sudo tee /etc/apt/sources.list.d/netxms.list > /dev/null
 
 echo "El archivo /etc/apt/sources.list.d/netxms.list ha sido actualizado."
+sudo wget -q -O - https://packages.netxms.org/netxms-keyring.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/netxms-keyring.gpg
 sudo apt update
 sudo apt-get install netxms-agent -y
 sudo systemctl start netxms-agent
