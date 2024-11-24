@@ -226,8 +226,8 @@ EOF
 
 # Menú de selección de opciones
 cmd=(dialog --separate-output --checklist "Elige un opcion:" 22 76 16)
-options=(0 "update Script" off
-         1 "Update y upgrade" off
+options=(0 "Actualizar Script" off
+         1 "Update y upgrade de linux" off
          2 "Script para mantener activa una impresora" off
          3 "Instalar VNC" off
          4 "Instalar OPENSSH" off
