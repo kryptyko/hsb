@@ -1,5 +1,33 @@
 #!/bin/bash
+# URL donde se encuentra la versión más reciente del script
+SCRIPT_URL="https://raw.githubusercontent.com/kryptyko/hsb/refs/heads/main/instalador.sh"
+LOCAL_SCRIPT_PATH="$0"
 
+
+# Función para actualizar el script desde GitHub
+update_script() {
+    echo "Verificando actualizaciones..."
+    # Descarga el script y guarda el código de estado HTTP
+    HTTP_STATUS=$(curl -s -o "$LOCAL_SCRIPT_PATH.new" -w "%{http_code}" "$SCRIPT_URL")
+
+    # Verifica si la descarga fue exitosa
+    if [ "$HTTP_STATUS" -ne 200 ]; then
+        echo "Error al descargar el script. Código de estado: $HTTP_STATUS"
+        rm -f "$LOCAL_SCRIPT_PATH.new"  # Elimina el archivo temporal
+        return
+    fi
+
+    # Compara la versión local con la nueva
+    if ! diff -q "$LOCAL_SCRIPT_PATH" "$LOCAL_SCRIPT_PATH.new" > /dev/null; then
+        echo "Actualización disponible. Actualizando script..."
+        mv "$LOCAL_SCRIPT_PATH.new" "$LOCAL_SCRIPT_PATH"
+        chmod +x "$LOCAL_SCRIPT_PATH"
+        echo "Script actualizado exitosamente."
+    else
+        echo "El script ya está actualizado."
+        rm "$LOCAL_SCRIPT_PATH.new"
+    fi
+}
 # Función para actualizar y actualizar el sistema
 update_upgrade() {
     sudo apt clean -y && sudo apt autoclean -y && sudo apt autoremove -y && sudo apt --fix-broken install
@@ -198,7 +226,8 @@ EOF
 
 # Menú de selección de opciones
 cmd=(dialog --separate-output --checklist "Elige un opcion:" 22 76 16)
-options=(1 "Update y upgrade" off
+options=(0 "update Script" off
+         1 "Update y upgrade" off
          2 "Script para mantener activa una impresora" off
          3 "Instalar VNC" off
          4 "Instalar OPENSSH" off
@@ -220,6 +249,7 @@ clear
 for choice in $choices
 do
     case $choice in
+        0) update_script ;;
         1) update_upgrade ;;
         2) activate_printer ;;
         3) install_vnc ;;
