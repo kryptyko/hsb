@@ -228,7 +228,7 @@ EOF
 install_wdservice() {
     echo "Instalando WDSERVICE..."
     wget -N https://www.dwservice.net/download/dwagent.sh
-    sudo bash dwagent.sh
+    sudo bash dwagent.sh -console
     echo "WDSERVICE instalado correctamente."
 }
 # Menú de selección de opciones
