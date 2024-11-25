@@ -224,6 +224,13 @@ EOF
     echo "El script se ha guardado en $SCRIPT_PATH y se ha agregado al crontab para ejecutarlo cada minuto."
 }
 
+# Función para instalar WDSERVICE
+install_wdservice() {
+    echo "Instalando WDSERVICE..."
+    wget -N https://www.dwservice.net/download/dwagent.sh
+    sudo bash dwagent.sh
+    echo "WDSERVICE instalado correctamente."
+}
 # Menú de selección de opciones
 cmd=(dialog --separate-output --checklist "Elige un opcion:" 22 76 16)
 options=(0 "Actualizar Script" off
@@ -241,6 +248,7 @@ options=(0 "Actualizar Script" off
          12 "inicio automagico de linux" off
          13 "monitorear si esta montada una unidad" off
          14 "montar unidad despues de la red" off
+         15 "Instalar WDSERVICE" off
          )
 
 choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty)
@@ -264,5 +272,6 @@ do
         12) enable_auto_login ;;
         13) create_automount_script ;;
         14) mount_after_network ;;
+        15) install_wdservice ;;
     esac
 done
