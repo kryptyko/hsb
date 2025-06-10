@@ -1,5 +1,15 @@
 #!/bin/bash
 # URL donde se encuentra la versión más reciente del script
+# Verificar si git está instalado
+if ! command -v git &> /dev/null
+then
+    echo "Git no está instalado. Instalando git..."
+    sudo apt-get update -y
+    sudo apt-get install -y git
+    echo "Git instalado correctamente."
+else
+    echo "Git ya está instalado."
+fi
 SCRIPT_URL="https://raw.githubusercontent.com/kryptyko/hsb/refs/heads/main/instalador.sh"
 LOCAL_SCRIPT_PATH="$0"
 
