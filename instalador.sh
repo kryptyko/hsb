@@ -3,6 +3,32 @@
 SCRIPT_URL="https://raw.githubusercontent.com/kryptyko/hsb/refs/heads/main/instalador.sh"
 LOCAL_SCRIPT_PATH="$0"
 
+# Cargar configuración si existe
+CONFIG_FILE="config.sh"
+if [ -f "$CONFIG_FILE" ]; then
+    echo "Cargando configuración desde $CONFIG_FILE..."
+    source "$CONFIG_FILE"
+else
+    echo "Archivo de configuración $CONFIG_FILE no encontrado."
+    echo "Puedes crear uno basado en config_template.sh"
+fi
+
+# Función de logging seguro (no registra credenciales)
+log_message() {
+    local level="$1"
+    local message="$2"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local log_entry="[$timestamp] [$level] $message"
+    
+    # Mostrar en consola
+    echo "$log_entry"
+    
+    # Guardar en archivo si está configurado
+    if [ -n "$LOG_FILE" ]; then
+        echo "$log_entry" >> "$LOG_FILE"
+    fi
+}
+
 
 # Función para actualizar el script desde GitHub
 update_script() {
@@ -99,12 +125,92 @@ disable_auto_printer_search() {
     sudo systemctl status cups-browsed
 }
 
+# Función para obtener credenciales de forma segura
+get_secure_credentials() {
+    local prompt="$1"
+    local -n result_var="$2"
+    
+    # Intentar leer desde variable de entorno primero
+    if [ -n "${!2}" ]; then
+        result_var="${!2}"
+        return 0
+    fi
+    
+    # Si no hay variable de entorno, pedir al usuario
+    echo -n "$prompt: "
+    read -s result_var
+    echo  # Nueva línea después de la entrada
+}
+
 # Función para montar HSBNAS
 mount_hsbnas() {
     echo "Instalando HSBNAS..."
-    sudo mkdir /mnt/hsbnas
-    echo "//10.0.0.223/datos /mnt/hsbnas cifs rw,uid=administrador,gid=administrador,vers=1.0,user=administrador,domain=sanbernardo,password=administrattor1." >> "/etc/fstab"
-    sudo mount -a
+    
+    # Variables para credenciales
+    local server=""
+    local username=""
+    local password=""
+    local domain=""
+    local share=""
+    
+    # Obtener configuración del servidor
+    if [ -n "$HSBNAS_SERVER" ]; then
+        server="$HSBNAS_SERVER"
+    else
+        echo -n "Servidor HSBNAS (ej: 10.0.0.223): "
+        read server
+    fi
+    
+    # Obtener credenciales de forma segura
+    get_secure_credentials "Usuario" username
+    get_secure_credentials "Contraseña" password
+    get_secure_credentials "Dominio" domain
+    
+    # Obtener share
+    if [ -n "$HSBNAS_SHARE" ]; then
+        share="$HSBNAS_SHARE"
+    else
+        echo -n "Share (ej: datos): "
+        read share
+    fi
+    
+    # Validar entradas
+    if [ -z "$server" ] || [ -z "$username" ] || [ -z "$password" ] || [ -z "$domain" ] || [ -z "$share" ]; then
+        echo "Error: Todos los campos son requeridos."
+        return 1
+    fi
+    
+    sudo mkdir -p /mnt/hsbnas
+    
+    # Crear archivo de credenciales temporal con permisos restrictivos
+    CREDENTIALS_FILE="/tmp/hsbnas_credentials_$$"
+    cat > "$CREDENTIALS_FILE" << EOF
+username=$username
+password=$password
+domain=$domain
+EOF
+    chmod 600 "$CREDENTIALS_FILE"
+    
+    # Agregar entrada al fstab con archivo de credenciales
+    FSTAB_ENTRY="//$server/$share /mnt/hsbnas cifs rw,uid=administrador,gid=administrador,vers=1.0,credentials=$CREDENTIALS_FILE"
+    
+    # Verificar si ya existe la entrada en fstab
+    if ! grep -q "//$server/$share" /etc/fstab; then
+        echo "$FSTAB_ENTRY" | sudo tee -a /etc/fstab
+    fi
+    
+    # Intentar montar
+    if sudo mount -a; then
+        echo "HSBNAS montado correctamente."
+        
+        # Limpiar credenciales después de un tiempo
+        TIMEOUT=${CREDENTIALS_TIMEOUT:-300}
+        (sleep $TIMEOUT && rm -f "$CREDENTIALS_FILE") &
+    else
+        echo "Error al montar HSBNAS."
+        rm -f "$CREDENTIALS_FILE"
+        return 1
+    fi
 }
 
 # Función para desmontar HSBNAS
